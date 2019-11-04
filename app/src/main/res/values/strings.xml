@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Github Search App</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="enter_search_topic">Enter search topic</string>
+    <string name="enter_search_language">Enter search language</string>
+    <string name="Search">Search</string>
+</resources>
