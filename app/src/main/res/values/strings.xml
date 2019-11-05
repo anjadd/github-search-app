@@ -4,4 +4,6 @@
     <string name="enter_search_topic">Enter search topic</string>
     <string name="enter_search_language">Enter search language</string>
     <string name="Search">Search</string>
+    <string name="api_request_fail_error_msg">API request failed, please try again</string>
+    <string name="no_results_msg">There are no such Github repositories</string>
 </resources>
