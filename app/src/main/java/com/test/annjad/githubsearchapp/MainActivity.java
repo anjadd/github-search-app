@@ -31,7 +31,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements RepositoriesAdapter.ListItemClickListener {
 
     @BindView(R.id.etGitTopic)
     EditText mEtGitTopic;
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         */
         layoutManager = new LinearLayoutManager(this);
         mRvResults.setLayoutManager(layoutManager);
-        adapter = new RepositoriesAdapter(this, null);
+        adapter = new RepositoriesAdapter(this, null, this);
         mRvResults.setAdapter(adapter);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRvResults.getContext(),
                 layoutManager.getOrientation());
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             repoSearchList = repositories.getRepositories();
             mRvResults.setLayoutManager(layoutManager);
-            adapter = new RepositoriesAdapter(this, repositories.getRepositories());
+            adapter = new RepositoriesAdapter(this, repositories.getRepositories(), this);
             mRvResults.setAdapter(adapter);
 
             /* This allows the RecyclerView to do some optimisations on your UI,
@@ -148,6 +148,11 @@ public class MainActivity extends AppCompatActivity {
             mRvResults.setHasFixedSize(true);
         }
         mPbLoading.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onListItemClick(int clickedItemIndex) {
+        Toast.makeText(this, "You clicked: " + repoSearchList.get(clickedItemIndex).getName(), Toast.LENGTH_SHORT).show();
     }
 
     public static void hideKeyboard(Activity activity) {
