@@ -1,6 +1,8 @@
 package com.test.annjad.githubsearchapp;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -31,7 +33,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements RepositoriesAdapter.ListItemClickListener {
 
     @BindView(R.id.etGitTopic)
     EditText mEtGitTopic;
@@ -73,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         */
         layoutManager = new LinearLayoutManager(this);
         mRvResults.setLayoutManager(layoutManager);
-        adapter = new RepositoriesAdapter(this, null);
+        adapter = new RepositoriesAdapter(this, null, this);
         mRvResults.setAdapter(adapter);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mRvResults.getContext(),
                 layoutManager.getOrientation());
@@ -140,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             repoSearchList = repositories.getRepositories();
             mRvResults.setLayoutManager(layoutManager);
-            adapter = new RepositoriesAdapter(this, repositories.getRepositories());
+            adapter = new RepositoriesAdapter(this, repositories.getRepositories(), this);
             mRvResults.setAdapter(adapter);
 
             /* This allows the RecyclerView to do some optimisations on your UI,
@@ -148,6 +150,31 @@ public class MainActivity extends AppCompatActivity {
             mRvResults.setHasFixedSize(true);
         }
         mPbLoading.setVisibility(View.GONE);
+    }
+
+    /**
+     * 9. In the Activity class implement the Click Listener interface and you will have to override its method
+     * in order to show a toast message, open a new activity, open a web page etc.
+     **/
+    @Override
+    public void onListItemClick(int clickedItemIndex) {
+        /*
+        How to open the selected repository from the list in a browser:
+        To open a web page, use the ACTION_VIEW action and specify the web URL in the intent data.
+        Use Uri.parse to parse the String URL into a Uri
+        Create an Intent with Intent.ACTION_VIEW and the webpage Uri as parameters
+        */
+
+        Uri repoWebPage = Uri.parse(repoSearchList.get(clickedItemIndex).getHtmlUrl());
+        Intent intent = new Intent(Intent.ACTION_VIEW, repoWebPage);
+
+        /*
+        Now you need to ask the Android system if there's an app that can handle your request
+        If there isn't an app installed that can handle your intent, your app will crash
+        */
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     public static void hideKeyboard(Activity activity) {
