@@ -45,12 +45,6 @@
         android:text="@string/Search"
         android:textColor="@color/white" />
 
-    <ListView
-        android:id="@+id/lvGitSearchResults"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp" />
-
     <TextView
         android:id="@+id/tvErrorMsg"
         android:layout_width="match_parent"
@@ -59,8 +53,17 @@
 
     <ProgressBar
         android:id="@+id/pbLoading"
+        style="@android:style/Widget.Material.ProgressBar.Large"
         android:layout_width="wrap_content"
+        android:layout_gravity="center"
         android:layout_height="wrap_content"
         android:visibility="invisible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvGitSearchResults"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:scrollbars="vertical" />
 
 </LinearLayout>
