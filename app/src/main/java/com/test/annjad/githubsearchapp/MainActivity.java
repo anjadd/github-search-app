@@ -1,6 +1,8 @@
 package com.test.annjad.githubsearchapp;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -150,9 +152,29 @@ public class MainActivity extends AppCompatActivity implements RepositoriesAdapt
         mPbLoading.setVisibility(View.GONE);
     }
 
+    /**
+     * 9. In the Activity class implement the Click Listener interface and you will have to override its method
+     * in order to show a toast message, open a new activity, open a web page etc.
+     **/
     @Override
     public void onListItemClick(int clickedItemIndex) {
-        Toast.makeText(this, "You clicked: " + repoSearchList.get(clickedItemIndex).getName(), Toast.LENGTH_SHORT).show();
+        /*
+        How to open the selected repository from the list in a browser:
+        To open a web page, use the ACTION_VIEW action and specify the web URL in the intent data.
+        Use Uri.parse to parse the String URL into a Uri
+        Create an Intent with Intent.ACTION_VIEW and the webpage Uri as parameters
+        */
+
+        Uri repoWebPage = Uri.parse(repoSearchList.get(clickedItemIndex).getHtmlUrl());
+        Intent intent = new Intent(Intent.ACTION_VIEW, repoWebPage);
+
+        /*
+        Now you need to ask the Android system if there's an app that can handle your request
+        If there isn't an app installed that can handle your intent, your app will crash
+        */
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     public static void hideKeyboard(Activity activity) {

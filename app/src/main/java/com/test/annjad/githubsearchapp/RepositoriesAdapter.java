@@ -14,22 +14,39 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+/**
+ * 1. Create adapter class that extends the RecyclerView.Adapter<YourAdapter.YourViewHolder>
+ **/
 public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapter.RepositoryViewHolder> {
+
+    //Check this tutorial https://youtu.be/69C1ljfDvl0
 
     private Context mContext;
     private List<Repository> mListRepos;
     final private ListItemClickListener mOnClickListener;
 
+    /**
+     * 7. Next, follow these steps for implementing a Click Listener:
+     * Declare a listener interface with a method that has the clicked item position
+     **/
     /*
     Create a custom interface that specifies the listener’s behavior.
     Within that interface, define a void method called onListItemClick that takes
     an int as a parameter, which is the index of the list item that was clicked
     */
     public interface ListItemClickListener {
-
         void onListItemClick(int clickedItemIndex);
     }
 
+    /**
+     * 5. Add an adapter constructor to get the context and the data set
+     *
+     * 8. Declare a Click Listener interface variable and set it in the adapter constructor
+     * - you will need it in the ViewHolder class
+     *
+     * 9. In the Activity class implement the Click Listener interface and you will have to override its method
+     * in order to show a toast message, open a new activity, etc.
+     **/
     public RepositoriesAdapter(Context context, List<Repository> listRepos, ListItemClickListener clickListener) {
         /*
         You can get the data source using the constructor like this.
@@ -40,6 +57,9 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
         mOnClickListener = clickListener;
     }
 
+    /**
+     * 6. Implement the required methods: onCreateViewHolder(), onBindViewHolder() and getItemCount()
+     **/
     @NonNull
     @Override
     public RepositoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -75,9 +95,18 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
         return mListRepos == null ? 0 : mListRepos.size();
     }
 
-    class RepositoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    /**
+     * 2. Create inner ViewHolder class that extends the RecyclerView.ViewHolder
+     *
+     * 10. Add a click listener to the ViewHolder class - implement a standard OnClickListener,
+     * which will require an override of the OnClick() method
+     **/
 
-        // You have to declare all your views here
+    class RepositoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        /**
+         * 4. Declare and bind all list item views
+         **/
+        // You have to declare all your views from the list item layout file
 
         @BindView(R.id.repoName)
         TextView repoName;
@@ -88,6 +117,11 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
         @BindView(R.id.repoStars)
         TextView repoStars;
 
+        /**
+         * 3. Add a constructor for the ViewHolder class, with Butterknife for binding the views
+         *
+         * 12. Add a clickListener to the entire row
+         **/
         public RepositoryViewHolder(@NonNull View itemView) {
             /*
             The input itemView is actually the linear layout which represents one row in our app
@@ -101,6 +135,9 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
             itemView.setOnClickListener(this);
         }
 
+        /**
+         * 11. Override of the OnClick() method from the OnClickListener interface
+         **/
         /*
         After the adapter has access to a click listener, we need to pass it to a ViewHolder
         so that the view can invoke it. That is done by implementing a View.OnClickListener
@@ -114,5 +151,4 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
             mOnClickListener.onListItemClick(clickedItemIndex);
         }
     }
-
 }
