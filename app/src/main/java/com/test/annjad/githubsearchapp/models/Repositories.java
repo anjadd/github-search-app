@@ -1,4 +1,4 @@
-package com.test.annjad.githubsearchapp;
+package com.test.annjad.githubsearchapp.models;
 
 import com.squareup.moshi.Json;
 

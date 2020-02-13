@@ -1,5 +1,7 @@
 package com.test.annjad.githubsearchapp;
 
+import com.test.annjad.githubsearchapp.models.Repositories;
+
 import java.util.Map;
 
 import io.reactivex.Single;

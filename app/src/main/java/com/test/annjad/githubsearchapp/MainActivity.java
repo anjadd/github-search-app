@@ -14,26 +14,25 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.HashMap;
+import com.test.annjad.githubsearchapp.adapters.RepositoriesAdapter;
+import com.test.annjad.githubsearchapp.models.Repository;
+import com.test.annjad.githubsearchapp.viewmodels.GithubRepositoryViewModel;
+
 import java.util.List;
-import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements RepositoriesAdapter.ListItemClickListener {
+
+    private static final String TAG = "MainActivity";
 
     @BindView(R.id.etGitTopic)
     EditText mEtGitTopic;
@@ -53,10 +52,12 @@ public class MainActivity extends AppCompatActivity implements RepositoriesAdapt
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
-    CompositeDisposable compositeDisposable = new CompositeDisposable();
-    List<Repository> repoSearchList;
-    RepositoriesAdapter adapter;
-    LinearLayoutManager layoutManager;
+    private String topic, language;
+    private List<Repository> mRepoSearchList;
+    private RepositoriesAdapter adapter;
+    private LinearLayoutManager layoutManager;
+    private GithubRepositoryViewModel mGithubRepositoryViewModel;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,13 +67,33 @@ public class MainActivity extends AppCompatActivity implements RepositoriesAdapt
         toolbar.setTitle(getString(R.string.app_name));
         setSupportActionBar(toolbar);
 
-        /*
-        The layout manager decides how the data in the RecyclerView is displayed.
-        The recycler view library provides the following build-in layout managers:
-        LinearLayoutManager, GridLayoutManager and StaggeredGridLayoutManager.
 
-        Set up the adapter with empty data, so it won't show error in log
-        */
+        /*
+         * Associate the ViewModel with the activity or fragment that it's designed for - declare
+         * the ViewModel object and set it up
+         */
+        mGithubRepositoryViewModel = new ViewModelProvider(this).get(GithubRepositoryViewModel.class);
+        /*
+         * Next, you need to observe changes done to the objects in our ViewModel - the LiveData objects
+         */
+        checkIfViewModelIsChanged();
+        initRecyclerView();
+        initSearchFiltersForTesting();
+    }
+
+    private void initSearchFiltersForTesting() {
+        mEtGitTopic.setText("MVVM");
+        mEtGitLanguage.setText("Android Java");
+    }
+
+    private void initRecyclerView() {
+    /*
+    The layout manager decides how the data in the RecyclerView is displayed.
+    The recycler view library provides the following build-in layout managers:
+    LinearLayoutManager, GridLayoutManager and StaggeredGridLayoutManager.
+
+    Set up the adapter with empty data, so it won't show error in log
+    */
         layoutManager = new LinearLayoutManager(this);
         mRvResults.setLayoutManager(layoutManager);
         adapter = new RepositoriesAdapter(this, null, this);
@@ -84,71 +105,66 @@ public class MainActivity extends AppCompatActivity implements RepositoriesAdapt
 
     @OnClick(R.id.btnSearch)
     void onSearchClick(View view) {
-        String topic = mEtGitTopic.getText().toString();
-        String language = mEtGitLanguage.getText().toString();
+        topic = mEtGitTopic.getText().toString();
+        language = mEtGitLanguage.getText().toString();
 
         if (topic.isEmpty() || language.isEmpty()) {
             Toast.makeText(this, "You need to enter some search parameters", Toast.LENGTH_SHORT).show();
         } else {
             hideKeyboard(this);
-            mPbLoading.setVisibility(View.VISIBLE);
-            performGithubSearch(topic.trim(), language.trim());
+            showProgressBar();
+            mGithubRepositoryViewModel.getRepositories(topic.trim(), language.trim()).observe(this, new Observer<List<Repository>>() {
+                @Override
+                public void onChanged(List<Repository> repositories) {
+                    String isListEmpty = repositories == null ? "empty" : "not empty";
+                    Log.d(TAG, "onChanged: Search is clicked, list is: " + isListEmpty);
+                    loadResult(repositories);
+                }
+            });
         }
     }
 
-    private void performGithubSearch(String topic, String language) {
 
-        //API endpoint: https://api.github.com/search/repositories?q=smoothie&language:java&sort=stars&order=desc
-        Map<String, String> filters = new HashMap<>();
-        filters.put("q", topic);
-        if (!language.isEmpty()) {
-            language = language.replace(" ", "+");
-            filters.put("language", language);
+    private void checkIfViewModelIsChanged() {
+        Log.d(TAG, "checkIfViewModelIsChanged: started");
+        if (topic == null && language == null){
+            return;
         }
-        filters.put("sort", "stars");
-        filters.put("order", "desc");
+        mGithubRepositoryViewModel.getRepositories(topic, language).observe(this, new Observer<List<Repository>>() {
+            @Override
+            public void onChanged(List<Repository> repositories) {
+                Log.d(TAG, "onChanged: started");
+//                    adapter.notifyDataSetChanged();
+                adapter = new RepositoriesAdapter(getApplicationContext(), repositories, MainActivity.this);
+                mRvResults.setAdapter(adapter);
+            }
+        });
 
-        Retrofit retrofit = RetrofitClient.getRetrofitClient();
-        GithubApi service = retrofit.create(GithubApi.class);
-        Single<Repositories> searchRepositories = service.getGithubSearchRepositories(filters);
-
-        searchRepositories.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<Repositories>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        compositeDisposable.add(d);
-                    }
-
-                    @Override
-                    public void onSuccess(Repositories repositories) {
-                        loadResult(repositories);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        mPbLoading.setVisibility(View.INVISIBLE);
-                        mTvErrorMsg.setText(getString(R.string.api_request_fail_error_msg));
-                        mTvErrorMsg.setVisibility(View.VISIBLE);
-                        Log.e("Anja", e.getMessage());
-                    }
-                });
     }
 
-    private void loadResult(Repositories repositories) {
+    private void loadResult(List<Repository> repositories) {
         if (repositories == null) {
             mTvErrorMsg.setText(getString(R.string.no_results_msg));
             mTvErrorMsg.setVisibility(View.VISIBLE);
         } else {
-            repoSearchList = repositories.getRepositories();
+            mRepoSearchList = repositories;
             mRvResults.setLayoutManager(layoutManager);
-            adapter = new RepositoriesAdapter(this, repositories.getRepositories(), this);
+            adapter = new RepositoriesAdapter(this, repositories, this);
             mRvResults.setAdapter(adapter);
 
             /* This allows the RecyclerView to do some optimisations on your UI,
             like avoiding to invalidate the whole layout when adapter contents change */
             mRvResults.setHasFixedSize(true);
         }
+        hideProgressBar();
+    }
+
+
+    private void showProgressBar() {
+        mPbLoading.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgressBar() {
         mPbLoading.setVisibility(View.GONE);
     }
 
@@ -165,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements RepositoriesAdapt
         Create an Intent with Intent.ACTION_VIEW and the webpage Uri as parameters
         */
 
-        Uri repoWebPage = Uri.parse(repoSearchList.get(clickedItemIndex).getHtmlUrl());
+        Uri repoWebPage = Uri.parse(mRepoSearchList.get(clickedItemIndex).getHtmlUrl());
         Intent intent = new Intent(Intent.ACTION_VIEW, repoWebPage);
 
         /*
@@ -186,14 +202,6 @@ public class MainActivity extends AppCompatActivity implements RepositoriesAdapt
             view = new View(activity);
         }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (!compositeDisposable.isDisposed()) {
-            compositeDisposable.dispose();
-        }
-        super.onDestroy();
     }
 
 }

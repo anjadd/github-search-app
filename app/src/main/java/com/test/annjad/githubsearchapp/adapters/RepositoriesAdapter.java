@@ -1,4 +1,4 @@
-package com.test.annjad.githubsearchapp;
+package com.test.annjad.githubsearchapp.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.test.annjad.githubsearchapp.R;
+import com.test.annjad.githubsearchapp.models.Repository;
 
 import java.util.List;
 
